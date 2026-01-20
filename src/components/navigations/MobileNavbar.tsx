@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import type { NavItem } from "./Navbar";
-
+import logoIskio from "@/assets/logo_iskioSPA.png";
 type Props = {
   items: NavItem[];
 };
@@ -15,21 +15,33 @@ export const MobileNavbar: React.FC<Props> = ({ items }) => {
     <>
       {/* Brand */}
       <Link to="/" className="flex items-center gap-2">
-        <div
-          className="h-9 w-9 rounded-2xl shadow-sm"
-          style={{
-            background:
-              "linear-gradient(135deg, #c98261 0%, #e8a393 45%, #edddc8 100%)",
-          }}
-          aria-hidden="true"
-        />
-        <div className="leading-tight">
-          <div className="text-sm font-semibold text-slate-900">
-            ISKIO <span className="font-bold" style={{ color: "#c98261" }}>Spa</span>
-          </div>
-          <div className="text-[11px] text-slate-500">Masajes • Relajación</div>
-        </div>
-      </Link>
+  {/* Logo */}
+  <div
+    className="h-9 w-9 rounded-2xl shadow-sm flex items-center justify-center overflow-hidden"
+    style={{
+      background:
+        "linear-gradient(135deg, #c98261 0%, #e8a393 45%, #edddc8 100%)",
+    }}
+  >
+    <img
+      src={logoIskio}
+      alt="ISKIO Spa"
+      className="h-6 w-6 object-contain"
+    />
+  </div>
+
+  {/* Texto */}
+  <div className="leading-tight">
+    <div className="text-sm font-semibold text-slate-900">
+      ISKIO{" "}
+      <span className="font-bold" style={{ color: "#c98261" }}>
+        Spa
+      </span>
+    </div>
+    <div className="text-[11px] text-slate-500">Masajes • Relajación</div>
+  </div>
+</Link>
+
 
       {/* Actions */}
       <div className="flex items-center gap-2">
@@ -39,7 +51,7 @@ export const MobileNavbar: React.FC<Props> = ({ items }) => {
           className="rounded-2xl"
           style={{ backgroundColor: "#c98261", color: "white" }}
         >
-          <Link to="/reservar" className="gap-2">
+          <Link to="/contacto" className="gap-2">
             <CalendarDays className="h-4 w-4" />
             Reservar
           </Link>
@@ -119,7 +131,7 @@ export const MobileNavbar: React.FC<Props> = ({ items }) => {
                 className="w-full rounded-2xl"
                 style={{ backgroundColor: "#c98261", color: "white" }}
               >
-                <Link to="/reservar" className="gap-2">
+                <Link to="/contacto" className="gap-2">
                   <CalendarDays className="h-4 w-4" />
                   Reservar ahora
                 </Link>

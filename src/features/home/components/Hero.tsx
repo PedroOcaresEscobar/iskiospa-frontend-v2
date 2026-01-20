@@ -1,30 +1,19 @@
 import React, { useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import {
-  Sparkles,
-  CalendarDays,
-  ChevronRight,
-} from "lucide-react";
+import { Sparkles, CalendarDays, ChevronRight } from "lucide-react";
 import {
   motion,
   useAnimation,
   useInView,
   useReducedMotion,
-  
+  type Variants,
+  type MotionProps,
 } from "framer-motion";
-
-/**
- * UX/UI improvements:
- * - Centered copy on mobile, left on desktop
- * - Buttons: full width on mobile, aligned on desktop
- * - Container width: 100% on normal screens, 80% on very large (2xl)
- * - Better spacing + max-width control
- */
 
 export const Hero: React.FC = () => {
   const controls = useAnimation();
-  const ref = useRef<HTMLElement | null>(null);
+  const ref = useRef<HTMLElement>(null);
   const isInView = useInView(ref, { once: true, amount: 0.25 });
   const reduceMotion = useReducedMotion();
 
@@ -53,37 +42,48 @@ export const Hero: React.FC = () => {
     if (isInView) controls.start("visible");
   }, [controls, isInView]);
 
-  const containerVariants = {
+  // ✅ Tipado: evita uniones raras en TS
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: reduceMotion
-        ? { duration: 0.2 }
-        : { staggerChildren: 0.15, delayChildren: 0.05, duration: 0.6 },
-    },
+    visible: reduceMotion
+      ? { opacity: 1, transition: { duration: 0.2 } }
+      : {
+          opacity: 1,
+          transition: {
+            staggerChildren: 0.15,
+            delayChildren: 0.05,
+            duration: 0.6,
+          },
+        },
   };
 
-  const itemVariants = {
+  // ✅ Clave: `type` literal (no string) + Variants tipado
+  const itemVariants: Variants = {
     hidden: { y: 18, opacity: 0 },
     visible: reduceMotion
       ? { y: 0, opacity: 1, transition: { duration: 0.2 } }
       : {
           y: 0,
           opacity: 1,
-          transition: { type: "spring", stiffness: 110, damping: 18 },
+          transition: {
+            type: "spring" as const,
+            stiffness: 110,
+            damping: 18,
+          },
         },
   };
 
-  const float = reduceMotion
+  // ✅ Tipado MotionProps para props spread en motion.div
+  const floatProps: MotionProps = reduceMotion
     ? {}
     : {
         animate: { y: [0, -12, 0] },
-        transition: { duration: 7, repeat: Infinity, ease: "easeInOut" as const },
+        transition: { duration: 7, repeat: Infinity, ease: "easeInOut" },
       };
 
   return (
     <section
-      ref={ref as any}
+      ref={ref}
       className="relative w-screen overflow-hidden min-h-[92vh] flex items-center"
       style={{ maxWidth: "100vw", width: "100%" }}
     >
@@ -104,7 +104,7 @@ export const Hero: React.FC = () => {
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(90deg, rgba(255,255,255,0.90) 0%, rgba(255,255,255,0.80) 45%, rgba(255,255,255,0.62) 100%)",
+              "linear-gradient(90deg, rgba(255,255,255,0.90) 0%, rgba(255,255,255,0.40) 45%, rgba(255,255,255,0.22) 100%)",
           }}
         />
 
@@ -122,13 +122,18 @@ export const Hero: React.FC = () => {
       {!reduceMotion && (
         <>
           <motion.div
-            {...float}
+            {...floatProps}
             className="pointer-events-none absolute top-16 left-6 h-56 w-56 rounded-full blur-2xl opacity-25"
             style={{ backgroundColor: "rgba(201,130,97,0.40)" }}
           />
           <motion.div
             animate={{ y: [0, -10, 0] }}
-            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 0.8 }}
+            transition={{
+              duration: 8,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 0.8,
+            }}
             className="pointer-events-none absolute bottom-16 right-6 h-64 w-64 rounded-full blur-2xl opacity-20"
             style={{ backgroundColor: "rgba(164,165,141,0.34)" }}
           />
@@ -167,9 +172,8 @@ export const Hero: React.FC = () => {
       )}
 
       {/* Contenido */}
-      <div className="relative w-full">
-        {/* ✅ Contenedor: normal full, pantallas grandes al 80% */}
-        <div className="mx-auto w-full px-4 sm:px-6 lg:px-10 py-14 md:py-20 max-w-[1400px] 2xl:max-w-[80vw]">
+      <div className="relative lg:w-[80%] mx-auto">
+        <div className="mx-auto w-full px-4 sm:px-6 lg:px-10 pb-14 pt-0 md:pb-20 md:pt-10 max-w-[1400px] 2xl:max-w-[80vw]">
           <motion.div
             variants={containerVariants}
             initial="hidden"
@@ -179,23 +183,12 @@ export const Hero: React.FC = () => {
             {/* Texto */}
             <motion.div
               variants={itemVariants}
-              className="
-                mx-auto lg:mx-0
-                w-full
-                max-w-[38rem] lg:max-w-[42rem]
-                text-center lg:text-left
-              "
+              className="mx-auto lg:mx-0 w-full max-w-[38rem] lg:max-w-[42rem] text-center lg:text-left"
             >
               {/* Badge */}
               <motion.div
                 whileHover={reduceMotion ? undefined : { scale: 1.03 }}
-                className="
-                  inline-flex items-center justify-center
-                  gap-2 rounded-full
-                  px-4 py-2 text-sm font-medium text-slate-800
-                  shadow-sm border border-black/5
-                  mb-6
-                "
+                className="inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-slate-800 shadow-sm border border-black/5 mb-6"
                 style={{ backgroundColor: "rgba(237,221,200,0.85)" }}
               >
                 <Sparkles className="h-4 w-4" style={{ color: "#c98261" }} />
@@ -207,38 +200,15 @@ export const Hero: React.FC = () => {
               {/* Título */}
               <motion.h1
                 variants={itemVariants}
-                className="
-                  mt-3
-                  text-4xl sm:text-5xl lg:text-6xl
-                  font-bold tracking-tight text-slate-900
-                  leading-[1.12]
-                "
+                className="mt-3 text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 leading-[1.12]"
               >
                 Masajes que{" "}
                 <span className="relative inline-block" style={{ color: "#c98261" }}>
                   relajan
-                  {!reduceMotion && (
-                    <motion.div
-                      className="absolute -bottom-1 left-0 right-0 h-1 origin-left"
-                      style={{ backgroundColor: "#c98261" }}
-                      initial={{ scaleX: 0 }}
-                      animate={{ scaleX: 1 }}
-                      transition={{ delay: 0.5, duration: 0.7 }}
-                    />
-                  )}
                 </span>{" "}
                 el cuerpo y{" "}
-                <span className="relative inline-block" style={{ color: "#a4a58d" }}>
+                <span className="relative inline-block" style={{ color: "#c98261" }}>
                   despejan
-                  {!reduceMotion && (
-                    <motion.div
-                      className="absolute -bottom-1 left-0 right-0 h-1 origin-left"
-                      style={{ backgroundColor: "#a4a58d" }}
-                      initial={{ scaleX: 0 }}
-                      animate={{ scaleX: 1 }}
-                      transition={{ delay: 0.8, duration: 0.7 }}
-                    />
-                  )}
                 </span>{" "}
                 la mente.
               </motion.h1>
@@ -246,30 +216,19 @@ export const Hero: React.FC = () => {
               {/* Texto */}
               <motion.p
                 variants={itemVariants}
-                className="
-                  mt-6
-                  text-base sm:text-lg
-                  leading-relaxed
-                  text-slate-700
-                  mx-auto lg:mx-0
-                  max-w-[34rem]
-                "
+                className="mt-6 text-base sm:text-lg leading-relaxed text-slate-700 mx-auto lg:mx-0 max-w-[34rem]"
               >
-                En <span className="font-bold text-slate-900">ISKIO Spa</span> llevamos una experiencia
-                profesional y cálida a personas, equipos y eventos. Ideal para pausas saludables,
-                activaciones y sesiones de relajación profunda.
+                En{" "}
+                <span className="font-bold text-slate-900">ISKIO Spa</span> llevamos
+                una experiencia profesional y cálida a personas, equipos y eventos.
+                Ideal para pausas saludables, activaciones y sesiones de relajación
+                profunda.
               </motion.p>
 
               {/* Botones */}
               <motion.div
                 variants={itemVariants}
-                className="
-                  mt-8
-                  flex flex-col sm:flex-row
-                  gap-3 sm:gap-4
-                  w-full
-                  justify-center lg:justify-start
-                "
+                className="mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 w-full justify-center lg:justify-start"
               >
                 <motion.div
                   whileHover={reduceMotion ? undefined : { scale: 1.02 }}
@@ -278,19 +237,10 @@ export const Hero: React.FC = () => {
                 >
                   <Button
                     asChild
-                    className="
-                      w-full sm:w-auto
-                      rounded-2xl shadow-lg
-                      px-7 sm:px-8
-                      h-12 sm:h-12
-                      text-base font-semibold
-                      gap-3
-                      transition-all duration-300
-                      hover:shadow-xl
-                    "
+                    className="w-full sm:w-auto rounded-2xl shadow-lg px-7 sm:px-8 h-12 text-base font-semibold gap-3 transition-all duration-300 hover:shadow-xl"
                     style={{ backgroundColor: "#c98261", color: "white" }}
                   >
-                    <Link to="/reservar" className="flex items-center justify-center gap-3">
+                    <Link to="/contacto" className="flex items-center justify-center gap-3">
                       <CalendarDays className="h-5 w-5" />
                       Reservar ahora
                       <ChevronRight className="h-4 w-4" />
@@ -306,16 +256,7 @@ export const Hero: React.FC = () => {
                   <Button
                     asChild
                     variant="outline"
-                    className="
-                      w-full sm:w-auto
-                      rounded-2xl
-                      border-slate-300
-                      bg-white/90 hover:bg-white
-                      px-7 sm:px-8
-                      h-12 sm:h-12
-                      text-base font-semibold
-                      gap-2
-                    "
+                    className="w-full sm:w-auto rounded-2xl border-slate-300 bg-white/90 hover:bg-white px-7 sm:px-8 h-12 text-base font-semibold gap-2"
                   >
                     <Link to="/servicios" className="flex items-center justify-center gap-2">
                       Ver servicios
@@ -326,7 +267,6 @@ export const Hero: React.FC = () => {
               </motion.div>
             </motion.div>
 
-            {/* Columna derecha (placeholder): si la usas después, aquí queda perfecto */}
             <div className="hidden lg:block" />
           </motion.div>
         </div>

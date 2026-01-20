@@ -9,7 +9,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Servicios", to: "/servicios" },
   { label: "Empresas", to: "/empresas" },
   { label: "Eventos", to: "/eventos" },
-  { label: "Sobre ISKIO", to: "/sobre" },
   { label: "Contacto", to: "/contacto" },
 ];
 

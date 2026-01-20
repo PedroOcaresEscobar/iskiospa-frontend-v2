@@ -3,6 +3,7 @@ import { NavLink, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Phone, CalendarDays } from "lucide-react";
 import type { NavItem } from "./Navbar";
+import { NavbarBrand } from "./NavbarBrand";
 
 type Props = {
   items: NavItem[];
@@ -12,22 +13,7 @@ export const DesktopNavbar: React.FC<Props> = ({ items }) => {
   return (
     <>
       {/* Brand */}
-      <Link to="/" className="flex items-center gap-2">
-        <div
-          className="h-9 w-9 rounded-2xl shadow-sm"
-          style={{
-            background:
-              "linear-gradient(135deg, #c98261 0%, #e8a393 45%, #edddc8 100%)",
-          }}
-          aria-hidden="true"
-        />
-        <div className="leading-tight">
-          <div className="text-sm font-semibold tracking-wide text-slate-900">
-            ISKIO <span className="font-bold" style={{ color: "#c98261" }}>Spa</span>
-          </div>
-          <div className="text-[11px] text-slate-500">Corporativo • Domicilio • Eventos</div>
-        </div>
-      </Link>
+      <NavbarBrand />
 
       {/* Nav */}
       <nav className="flex items-center gap-1">
@@ -38,7 +24,7 @@ export const DesktopNavbar: React.FC<Props> = ({ items }) => {
             className={({ isActive }) =>
               [
                 "rounded-xl px-3 py-2 text-sm font-medium transition",
-                "text-slate-700 hover:text-slate-900",
+                "text-slate-700 ",
                 "hover:bg-[rgba(237,221,200,0.55)]",
                 isActive
                   ? "bg-[rgba(201,130,97,0.14)] text-slate-900"
@@ -70,7 +56,7 @@ export const DesktopNavbar: React.FC<Props> = ({ items }) => {
             color: "white",
           }}
         >
-          <Link to="/reservar" className="gap-2">
+          <Link to="/contacto" className="gap-2">
             <CalendarDays className="h-4 w-4" />
             Reservar
           </Link>
@@ -79,3 +65,5 @@ export const DesktopNavbar: React.FC<Props> = ({ items }) => {
     </>
   );
 };
+
+export default DesktopNavbar;

@@ -1,11 +1,16 @@
+import Services from '@/features/services/components/Services'
 import { Hero } from '@/features/home/components/Hero'
-import React from 'react'
+
 
 export const HomePage = () => {
   return (
     <>
-    <div className='bg-red-600'>
-    <Hero></Hero>
+    <div className=''>
+    <Hero/>
+    <div className='lg:w-[90%]   mx-auto'>
+    <Services/>
+    </div>
+    
     </div>
     
     </>

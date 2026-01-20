@@ -2,56 +2,32 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
 import { Phone, Mail, MapPin } from "lucide-react";
+import NavbarBrand from "./NavbarBrand";
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="w-full">
+    <footer className="w-full ">
       <div style={{ backgroundColor: "rgba(237,221,200,0.45)" }}>
-        <div className="w-full px-4 py-10 2xl:w-[80vw] 2xl:px-0 2xl:mx-auto">
-          <div className="grid gap-10 md:grid-cols-4">
+        <div className="w-full px-4 py-10 2xl:w-[80vw]  2xl:px-0 2xl:mx-auto">
+          <div className="grid gap-10 md:grid-cols-3 lg:w-[90%] mx-auto ">
             {/* Brand */}
             <div className="md:col-span-1">
-              <Link to="/" className="flex items-center gap-2">
-                <div
-                  className="h-10 w-10 rounded-2xl shadow-sm"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #c98261 0%, #e8a393 45%, #edddc8 100%)",
-                  }}
-                  aria-hidden="true"
-                />
-                <div>
-                  <div className="text-base font-semibold text-slate-900">
-                    ISKIO <span style={{ color: "#c98261" }}>Spa</span>
-                  </div>
-                  <div className="text-xs text-slate-600">
-                    Masajes corporales y relajación
-                  </div>
-                </div>
-              </Link>
+              {/* Brand */}
+            <NavbarBrand/>
 
               <p className="mt-4 text-sm text-slate-700 leading-relaxed">
                 Experiencias de bienestar para todo público: domicilio, empresas y eventos.
               </p>
             </div>
 
-            {/* Links */}
-            <div>
-              <h4 className="text-sm font-semibold text-slate-900">Explorar</h4>
-              <ul className="mt-4 space-y-2 text-sm">
-                <li><Link className="text-slate-700 hover:text-slate-900" to="/servicios">Servicios</Link></li>
-                <li><Link className="text-slate-700 hover:text-slate-900" to="/empresas">Empresas</Link></li>
-                <li><Link className="text-slate-700 hover:text-slate-900" to="/eventos">Eventos</Link></li>
-                <li><Link className="text-slate-700 hover:text-slate-900" to="/sobre">Sobre ISKIO</Link></li>
-              </ul>
-            </div>
 
+            
             {/* Ayuda */}
             <div>
               <h4 className="text-sm font-semibold text-slate-900">Ayuda</h4>
               <ul className="mt-4 space-y-2 text-sm">
                 <li><Link className="text-slate-700 hover:text-slate-900" to="/contacto">Contacto</Link></li>
-                <li><Link className="text-slate-700 hover:text-slate-900" to="/reservar">Reservas</Link></li>
+                <li><Link className="text-slate-700 hover:text-slate-900" to="/contacto">Reservas</Link></li>
                 <li><Link className="text-slate-700 hover:text-slate-900" to="/preguntas">Preguntas frecuentes</Link></li>
               </ul>
             </div>
