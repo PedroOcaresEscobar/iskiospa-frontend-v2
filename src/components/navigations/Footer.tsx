@@ -8,8 +8,8 @@ export const Footer: React.FC = () => {
   return (
     <footer className="w-full ">
       <div style={{ backgroundColor: "rgba(237,221,200,0.45)" }}>
-        <div className="w-full px-4 py-10 2xl:w-[80vw]  2xl:px-0 2xl:mx-auto">
-          <div className="grid gap-10 md:grid-cols-3 lg:w-[90%] mx-auto ">
+        <div className="w-full px-4 py-10 2xl:w-[80%] 2xl:px-0 2xl:mx-auto">
+          <div className="grid gap-10 md:grid-cols-3 lg:w-[90%] 2xl:w-[80%] mx-auto ">
             {/* Brand */}
             <div className="md:col-span-1">
               {/* Brand */}

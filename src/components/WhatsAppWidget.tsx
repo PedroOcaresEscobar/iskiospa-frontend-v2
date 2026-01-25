@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, Send, X } from "lucide-react";
+import { CalendarDays, MessageCircle, Send, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 type Props = {
@@ -189,6 +189,26 @@ export default function WhatsAppWidget({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Botón agendar */}
+      <a
+        href="/agendar"
+        className="
+          group relative h-14 w-14 rounded-full
+          bg-[#c98261] hover:bg-[#b87456]
+          text-white
+          shadow-lg
+          flex items-center justify-center
+          transition-transform hover:scale-110
+          focus:outline-none focus:ring-4 focus:ring-[#c98261]/30
+        "
+        aria-label="Agenda aqui"
+      >
+        <span className="pointer-events-none absolute right-16 hidden whitespace-nowrap rounded-full bg-slate-900 px-3 py-1 text-xs text-white shadow-md group-hover:block">
+          Agenda aqui
+        </span>
+        <CalendarDays className="h-7 w-7 text-white" />
+      </a>
 
       {/* Botón flotante */}
       <button

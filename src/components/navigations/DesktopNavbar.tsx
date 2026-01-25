@@ -56,7 +56,7 @@ export const DesktopNavbar: React.FC<Props> = ({ items }) => {
             color: "white",
           }}
         >
-          <Link to="/contacto" className="gap-2">
+          <Link to="/agendar" className="gap-2">
             <CalendarDays className="h-4 w-4" />
             Reservar
           </Link>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Check, CalendarDays, MessageCircle, Building2, Users, Sparkles } from "lucide-react";
@@ -7,6 +7,8 @@ import descontracturanteImg from "@/assets/services/descontracturante.jpg";
 import deportivoImg from "@/assets/services/deportivo.jpg";
 import relajanteImg from "@/assets/services/relajante.jpg";
 import giftcardProfesorImg from "@/assets/services/giftcard-profesor.jpg";
+import { listServices, type ServiceItem } from "@/services/servicesApi";
+import { listServiceCategories, type ServiceCategory } from "@/services/categoriesApi";
 
 type Service = {
   title: string; // etiqueta (Masaje / Plan / Beneficio)
@@ -26,7 +28,7 @@ type Category = {
   items: Service[];
 };
 
-const CATEGORIES: Category[] = [
+const STATIC_CATEGORIES: Category[] = [
   {
     id: "corporate",
     name: "Bienestar corporativo",
@@ -117,10 +119,96 @@ const CATEGORIES: Category[] = [
 ];
 
 export const BusinessServicesPage: React.FC = () => {
+  const [categories, setCategories] = useState<ServiceCategory[]>([]);
+  const [services, setServices] = useState<ServiceItem[]>([]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [servicesData, categoriesData] = await Promise.all([
+          listServices(),
+          listServiceCategories(),
+        ]);
+        setServices(servicesData);
+        setCategories(categoriesData);
+      } catch {
+        setServices([]);
+        setCategories([]);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  const dynamicCategories = useMemo(() => {
+    const visible = services.filter(
+      (service) => service.activo !== false && service.mostrar_empresas
+    );
+    if (visible.length === 0) {
+      return null;
+    }
+
+    const categoryMap = new Map<number, ServiceCategory>();
+    categories
+      .filter((cat) => cat.activo !== false)
+      .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0))
+      .forEach((cat) => categoryMap.set(cat.id, cat));
+
+    const grouped = new Map<number, ServiceItem[]>();
+    const withoutCategory: ServiceItem[] = [];
+
+    visible.forEach((service) => {
+      const categoryId = service.categoria_id;
+      if (categoryId && categoryMap.has(categoryId)) {
+        const list = grouped.get(categoryId) ?? [];
+        list.push(service);
+        grouped.set(categoryId, list);
+      } else {
+        withoutCategory.push(service);
+      }
+    });
+
+    const iconPool = [Building2, Sparkles, Users];
+    const result: Category[] = [];
+
+    categoryMap.forEach((cat, id) => {
+      const items = grouped.get(id);
+      if (!items || items.length === 0) return;
+      const Icon = iconPool[result.length % iconPool.length] ?? Building2;
+      result.push({
+        id: String(id),
+        name: cat.nombre,
+        description:
+          cat.descripcion ??
+          "Experiencias de bienestar pensadas para equipos, eventos y beneficios corporativos.",
+        icon: <Icon className="h-4 w-4" />,
+        items: items
+          .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0))
+          .map((service) => mapServiceItemToCard(service, "empresas")),
+      });
+    });
+
+    if (withoutCategory.length > 0) {
+      result.push({
+        id: "otros",
+        name: "Otros servicios",
+        description: "Opciones corporativas adicionales disponibles.",
+        icon: <Sparkles className="h-4 w-4" />,
+        items: withoutCategory
+          .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0))
+          .map((service) => mapServiceItemToCard(service, "empresas")),
+      });
+    }
+
+    return result.length > 0 ? result : null;
+  }, [categories, services]);
+
+  const categoriesToRender = dynamicCategories ?? STATIC_CATEGORIES;
+
   return (
-    <section className="w-[90%] mx-auto">
+    <section className="w-[90%] 2xl:w-[80%] mx-auto">
       <div className="w-full">
-        <div className="w-full max-w-6xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+        <div className="w-full max-w-6xl mx-auto px-4 py-12 sm:px-6 lg:px-8 2xl:max-w-none 2xl:w-[80%]">
           <header className="max-w-2xl">
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-slate-900 mb-4">
               Servicios para Empresas
@@ -132,7 +220,7 @@ export const BusinessServicesPage: React.FC = () => {
           </header>
 
           <div className="mt-10 space-y-14">
-            {CATEGORIES.map((cat) => (
+            {categoriesToRender.map((cat) => (
               <CategoryBlock key={cat.id} category={cat} />
             ))}
           </div>
@@ -261,14 +349,16 @@ function ServiceRow({ service, reverse }: { service: Service; reverse: boolean }
 
         <p className="mt-3 text-slate-700 leading-relaxed">{service.description}</p>
 
-        <ul className="mt-5 space-y-2">
-          {service.bullets.map((b) => (
-            <li key={b} className="flex items-start gap-2 text-sm text-slate-700">
-              <Check className="h-4 w-4 mt-0.5" style={{ color: "#a4a58d" }} />
-              <span>{b}</span>
-            </li>
-          ))}
-        </ul>
+        {service.bullets.length > 0 ? (
+          <ul className="mt-5 space-y-2">
+            {service.bullets.map((b) => (
+              <li key={b} className="flex items-start gap-2 text-sm text-slate-700">
+                <Check className="h-4 w-4 mt-0.5" style={{ color: "#a4a58d" }} />
+                <span>{b}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           <Button
@@ -305,3 +395,27 @@ function ServiceRow({ service, reverse }: { service: Service; reverse: boolean }
 }
 
 export default BusinessServicesPage;
+
+function mapServiceItemToCard(service: ServiceItem, context: "servicios" | "empresas"): Service {
+  const label =
+    service.cta_primary_label ||
+    (context === "empresas" ? "Cotizar ahora" : "Agendar");
+  const to =
+    service.cta_primary_url || (context === "empresas" ? "/empresas" : "/contacto");
+  const secondaryLabel =
+    service.cta_secondary_label ||
+    (context === "empresas" ? "Hablar por WhatsApp" : "Ver disponibilidad");
+  const secondaryUrl =
+    service.cta_secondary_url || (context === "empresas" ? "/contacto" : "/contacto");
+
+  return {
+    title: service.etiqueta?.trim() || "Servicio",
+    subtitle: service.subtitulo?.trim() || service.nombre,
+    description: service.descripcion ?? "",
+    bullets: service.beneficios ?? [],
+    image: service.imagen_url || descontracturanteImg,
+    ctaPrimary: { label, to },
+    ctaSecondary:
+      secondaryLabel && secondaryUrl ? { label: secondaryLabel, to: secondaryUrl } : undefined,
+  };
+}

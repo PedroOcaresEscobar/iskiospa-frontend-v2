@@ -51,7 +51,7 @@ export const MobileNavbar: React.FC<Props> = ({ items }) => {
           className="rounded-2xl"
           style={{ backgroundColor: "#c98261", color: "white" }}
         >
-          <Link to="/contacto" className="gap-2">
+          <Link to="/agendar" className="gap-2">
             <CalendarDays className="h-4 w-4" />
             Reservar
           </Link>
@@ -131,7 +131,7 @@ export const MobileNavbar: React.FC<Props> = ({ items }) => {
                 className="w-full rounded-2xl"
                 style={{ backgroundColor: "#c98261", color: "white" }}
               >
-                <Link to="/contacto" className="gap-2">
+                <Link to="/agendar" className="gap-2">
                   <CalendarDays className="h-4 w-4" />
                   Reservar ahora
                 </Link>

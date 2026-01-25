@@ -36,6 +36,7 @@ import {
   MessageSquare,
   CheckCircle,
 } from "lucide-react";
+import { getDisponibilidadPorFecha, listDiasDisponibles } from "@/services/disponibilidadApi";
 
 /**
  * ✅ Mejoras aplicadas (sin cambiar tu lógica):
@@ -63,27 +64,6 @@ interface ClientFormData {
   time: string;
 }
 
-interface TimeSlot {
-  time: string;
-  label: string;
-  available: boolean;
-}
-
-// Constants
-const TIME_SLOTS: TimeSlot[] = [
-  { time: "10:00", label: "10:00 AM", available: true },
-  { time: "11:00", label: "11:00 AM", available: true },
-  { time: "12:00", label: "12:00 PM", available: true },
-  { time: "13:00", label: "01:00 PM", available: true },
-  { time: "15:00", label: "03:00 PM", available: true },
-  { time: "16:00", label: "04:00 PM", available: true },
-  { time: "17:00", label: "05:00 PM", available: true },
-  { time: "18:00", label: "06:00 PM", available: true },
-  { time: "19:00", label: "07:00 PM", available: true },
-];
-
-const SATURDAY_SLOTS = TIME_SLOTS.slice(0, 6);
-
 // Utils
 const DateUtils = {
   startOfDay: (date: Date): Date => {
@@ -98,7 +78,6 @@ const DateUtils = {
     );
   },
   isSunday: (date: Date): boolean => date.getDay() === 0,
-  isSaturday: (date: Date): boolean => date.getDay() === 6,
   formatLongDate: (date: Date): string =>
     date.toLocaleDateString("es-CL", {
       weekday: "long",
@@ -106,22 +85,22 @@ const DateUtils = {
       month: "long",
       year: "numeric",
     }),
+  formatDateKey: (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  },
 };
 
 const TimeUtils = {
-  getAvailableTimes: (date: Date | undefined): string[] => {
-    if (!date) return [];
-    if (DateUtils.isSunday(date)) return [];
-    if (DateUtils.isPastDate(date)) return [];
-    return DateUtils.isSaturday(date)
-      ? SATURDAY_SLOTS.map((s) => s.time)
-      : TIME_SLOTS.map((s) => s.time);
-  },
   getTimeLabel: (time: string): string => {
-    const slot =
-      TIME_SLOTS.find((s) => s.time === time) ||
-      SATURDAY_SLOTS.find((s) => s.time === time);
-    return slot?.label || time;
+    const [hourText = "0", minute = "00"] = time.split(":");
+    const hour = Number(hourText);
+    if (Number.isNaN(hour)) return time;
+    const period = hour >= 12 ? "PM" : "AM";
+    const displayHour = ((hour + 11) % 12) + 1;
+    return `${String(displayHour).padStart(2, "0")}:${minute} ${period}`;
   },
 };
 
@@ -156,8 +135,8 @@ const useSuccessMessage = () => {
 // Small UI helper
 function SectionShell({ children }: { children: React.ReactNode }) {
   return (
-    <section className="w-[90%] mx-auto">
-      <div className="w-full max-w-6xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+    <section className="w-[90%] 2xl:w-[80%] mx-auto">
+      <div className="w-full max-w-6xl mx-auto px-4 py-12 sm:px-6 lg:px-8 2xl:max-w-none 2xl:w-[80%]">
         {children}
       </div>
     </section>
@@ -449,11 +428,11 @@ const ClientForm: React.FC<{
     date: undefined,
     time: "",
   });
-
-  const availableTimes = useMemo(
-    () => TimeUtils.getAvailableTimes(formData.date),
-    [formData.date]
-  );
+  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
+  const [availableDays, setAvailableDays] = useState<Set<string>>(new Set());
+  const [isLoadingTimes, setIsLoadingTimes] = useState(false);
+  const [daysLoaded, setDaysLoaded] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState<Date>(new Date());
 
   // ✅ Setter tipado (sin `any`)
   const setField = useCallback(
@@ -462,6 +441,47 @@ const ClientForm: React.FC<{
     },
     []
   );
+
+  useEffect(() => {
+    const loadAvailableDays = async () => {
+      setDaysLoaded(false);
+      try {
+        const start = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1);
+        const end = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 0);
+        const desde = DateUtils.formatDateKey(start);
+        const hasta = DateUtils.formatDateKey(end);
+        const dias = await listDiasDisponibles(desde, hasta);
+        setAvailableDays(new Set(dias));
+      } catch {
+        setAvailableDays(new Set());
+      } finally {
+        setDaysLoaded(true);
+      }
+    };
+
+    loadAvailableDays();
+  }, [calendarMonth]);
+
+  useEffect(() => {
+    const loadAvailableTimes = async () => {
+      if (!formData.date) {
+        setAvailableTimes([]);
+        return;
+      }
+      setIsLoadingTimes(true);
+      try {
+        const fechaKey = DateUtils.formatDateKey(formData.date);
+        const horas = await getDisponibilidadPorFecha(fechaKey);
+        setAvailableTimes(horas);
+      } catch {
+        setAvailableTimes([]);
+      } finally {
+        setIsLoadingTimes(false);
+      }
+    };
+
+    loadAvailableTimes();
+  }, [formData.date]);
 
   const canSubmit = useMemo(() => {
     return (
@@ -577,7 +597,16 @@ const ClientForm: React.FC<{
                       setField("date", date ?? undefined);
                       setField("time", ""); // reset hora al cambiar fecha
                     }}
-                    disabled={(date) => DateUtils.isPastDate(date) || DateUtils.isSunday(date)}
+                    onMonthChange={(date) => setCalendarMonth(date)}
+                    disabled={(date) => {
+                      if (DateUtils.isPastDate(date) || DateUtils.isSunday(date)) {
+                        return true;
+                      }
+                      if (daysLoaded) {
+                        return !availableDays.has(DateUtils.formatDateKey(date));
+                      }
+                      return false;
+                    }}
                     initialFocus
                     className="rounded-lg"
                   />
@@ -605,13 +634,17 @@ const ClientForm: React.FC<{
               <Select
                 value={formData.time}
                 onValueChange={(value) => setField("time", value)}
-                disabled={!formData.date || availableTimes.length === 0 || isLoading}
+                disabled={
+                  !formData.date || availableTimes.length === 0 || isLoading || isLoadingTimes
+                }
               >
                 <SelectTrigger className="rounded-2xl border-black/10 bg-white/70 h-12">
                   <SelectValue
                     placeholder={
                       !formData.date
                         ? "Primero elige una fecha"
+                        : isLoadingTimes
+                        ? "Cargando horas..."
                         : availableTimes.length === 0
                         ? "Sin horas disponibles"
                         : "Seleccionar hora"
@@ -627,7 +660,7 @@ const ClientForm: React.FC<{
                 </SelectContent>
               </Select>
 
-              {formData.date && availableTimes.length === 0 && (
+              {formData.date && !isLoadingTimes && availableTimes.length === 0 && (
                 <p className="text-sm text-amber-600 flex items-center gap-2">
                   <Clock className="h-4 w-4" />
                   No hay cupos disponibles para esta fecha

@@ -21,7 +21,7 @@ export const MainLayout = () => {
         </header>
   
         <main className="flex-1 ">
-          <div className="w-full  2xl:w-[80vw] 2xl:px-0 2xl:mx-auto">
+          <div className="w-full 2xl:w-[80%] 2xl:px-0 2xl:mx-auto">
             <Outlet />
           </div>
         </main>

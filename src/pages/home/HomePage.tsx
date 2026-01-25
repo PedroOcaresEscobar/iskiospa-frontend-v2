@@ -7,7 +7,7 @@ export const HomePage = () => {
     <>
     <div className=''>
     <Hero/>
-    <div className='lg:w-[90%]   mx-auto'>
+    <div className='lg:w-[90%] 2xl:w-[80%] mx-auto'>
     <Services/>
     </div>
     

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sparkles, CalendarDays, ChevronRight } from "lucide-react";
@@ -10,12 +10,14 @@ import {
   type Variants,
   type MotionProps,
 } from "framer-motion";
+import { listHomeContent, type HomeContentItem } from "@/services/homeContentApi";
 
 export const Hero: React.FC = () => {
   const controls = useAnimation();
   const ref = useRef<HTMLElement>(null);
   const isInView = useInView(ref, { once: true, amount: 0.25 });
   const reduceMotion = useReducedMotion();
+  const [homeContent, setHomeContent] = useState<HomeContentItem | null>(null);
 
   const particles = useMemo(() => {
     const count = 10;
@@ -36,11 +38,27 @@ export const Hero: React.FC = () => {
   }, []);
 
   const backgroundImageUrl =
+    homeContent?.imagen_url ||
     "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=1600&q=70";
 
   useEffect(() => {
     if (isInView) controls.start("visible");
   }, [controls, isInView]);
+
+  useEffect(() => {
+    const loadContent = async () => {
+      try {
+        const data = await listHomeContent();
+        if (data.length > 0) {
+          setHomeContent(data[0]);
+        }
+      } catch {
+        setHomeContent(null);
+      }
+    };
+
+    loadContent();
+  }, []);
 
   // ✅ Tipado: evita uniones raras en TS
   const containerVariants: Variants = {
@@ -202,15 +220,19 @@ export const Hero: React.FC = () => {
                 variants={itemVariants}
                 className="mt-3 text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 leading-[1.12]"
               >
-                Masajes que{" "}
-                <span className="relative inline-block" style={{ color: "#c98261" }}>
-                  relajan
-                </span>{" "}
-                el cuerpo y{" "}
-                <span className="relative inline-block" style={{ color: "#c98261" }}>
-                  despejan
-                </span>{" "}
-                la mente.
+                {homeContent?.titulo ?? (
+                  <>
+                    Masajes que{" "}
+                    <span className="relative inline-block" style={{ color: "#c98261" }}>
+                      relajan
+                    </span>{" "}
+                    el cuerpo y{" "}
+                    <span className="relative inline-block" style={{ color: "#c98261" }}>
+                      despejan
+                    </span>{" "}
+                    la mente.
+                  </>
+                )}
               </motion.h1>
 
               {/* Texto */}
@@ -218,11 +240,15 @@ export const Hero: React.FC = () => {
                 variants={itemVariants}
                 className="mt-6 text-base sm:text-lg leading-relaxed text-slate-700 mx-auto lg:mx-0 max-w-[34rem]"
               >
-                En{" "}
-                <span className="font-bold text-slate-900">ISKIO Spa</span> llevamos
-                una experiencia profesional y cálida a personas, equipos y eventos.
-                Ideal para pausas saludables, activaciones y sesiones de relajación
-                profunda.
+                {homeContent?.subtitulo ?? (
+                  <>
+                    En{" "}
+                    <span className="font-bold text-slate-900">ISKIO Spa</span>{" "}
+                    llevamos una experiencia profesional y cálida a personas,
+                    equipos y eventos. Ideal para pausas saludables, activaciones y
+                    sesiones de relajación profunda.
+                  </>
+                )}
               </motion.p>
 
               {/* Botones */}
@@ -240,7 +266,7 @@ export const Hero: React.FC = () => {
                     className="w-full sm:w-auto rounded-2xl shadow-lg px-7 sm:px-8 h-12 text-base font-semibold gap-3 transition-all duration-300 hover:shadow-xl"
                     style={{ backgroundColor: "#c98261", color: "white" }}
                   >
-                    <Link to="/contacto" className="flex items-center justify-center gap-3">
+                    <Link to="/agendar" className="flex items-center justify-center gap-3">
                       <CalendarDays className="h-5 w-5" />
                       Reservar ahora
                       <ChevronRight className="h-4 w-4" />

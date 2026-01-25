@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Check, CalendarDays, MessageCircle } from "lucide-react";
@@ -9,6 +9,7 @@ import deportivoImg from "@/assets/services/deportivo.jpg";
 import relajanteImg from "@/assets/services/relajante.jpg";
 import giftcardProfesorImg from "@/assets/services/giftcard-profesor.jpg";
 import promoMamaImg from "@/assets/services/promo-mama.jpg";
+import { listServices, type ServiceItem } from "@/services/servicesApi";
 
 type Service = {
   title: string;
@@ -20,7 +21,7 @@ type Service = {
   ctaSecondary?: { label: string; to: string };
 };
 
-const SERVICES: Service[] = [
+const STATIC_SERVICES: Service[] = [
   {
     title: "Masaje",
     subtitle: "Drenaje Linfático",
@@ -114,6 +115,33 @@ const SERVICES: Service[] = [
 ];
 
 export const Services: React.FC = () => {
+  const [services, setServices] = useState<ServiceItem[]>([]);
+
+  useEffect(() => {
+    const loadServices = async () => {
+      try {
+        const data = await listServices();
+        setServices(data);
+      } catch {
+        setServices([]);
+      }
+    };
+
+    loadServices();
+  }, []);
+
+  const servicesToRender = useMemo(() => {
+    const visible = services.filter(
+      (service) => service.activo !== false && service.mostrar_servicios
+    );
+    if (visible.length === 0) {
+      return STATIC_SERVICES;
+    }
+    return visible
+      .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0))
+      .map((service) => mapServiceItemToCard(service));
+  }, [services]);
+
   return (
     // Deja que el MainLayout controle el ancho (lg:w-[80%] mx-auto)
     <section className="w-full">
@@ -126,7 +154,7 @@ export const Services: React.FC = () => {
         }}
       >
         {/* Container responsive */}
-        <div className="w-full max-w-6xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+        <div className="w-full max-w-6xl mx-auto px-4 py-12 sm:px-6 lg:px-8 2xl:max-w-none 2xl:w-[80%]">
           {/* Título */}
           <div className="max-w-2xl">
             <h2 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
@@ -140,7 +168,7 @@ export const Services: React.FC = () => {
 
           {/* Lista */}
           <div className="mt-10 space-y-12">
-            {SERVICES.map((s, idx) => (
+            {servicesToRender.map((s, idx) => (
               <ServiceRow
                 key={`${s.title}-${s.subtitle}`}
                 service={s}
@@ -209,14 +237,16 @@ function ServiceRow({ service, reverse }: { service: Service; reverse: boolean }
 
         <p className="mt-3 text-slate-700 leading-relaxed">{service.description}</p>
 
-        <ul className="mt-5 space-y-2">
-          {service.bullets.map((b) => (
-            <li key={b} className="flex items-start gap-2 text-sm text-slate-700">
-              <Check className="h-4 w-4 mt-0.5" style={{ color: "#a4a58d" }} />
-              <span>{b}</span>
-            </li>
-          ))}
-        </ul>
+        {service.bullets.length > 0 ? (
+          <ul className="mt-5 space-y-2">
+            {service.bullets.map((b) => (
+              <li key={b} className="flex items-start gap-2 text-sm text-slate-700">
+                <Check className="h-4 w-4 mt-0.5" style={{ color: "#a4a58d" }} />
+                <span>{b}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           <Button
@@ -253,3 +283,21 @@ function ServiceRow({ service, reverse }: { service: Service; reverse: boolean }
 }
 
 export default Services;
+
+function mapServiceItemToCard(service: ServiceItem): Service {
+  const label = service.cta_primary_label || "Agendar";
+  const to = service.cta_primary_url || "/contacto";
+  const secondaryLabel = service.cta_secondary_label || "Ver disponibilidad";
+  const secondaryUrl = service.cta_secondary_url || "/contacto";
+
+  return {
+    title: service.etiqueta?.trim() || "Servicio",
+    subtitle: service.subtitulo?.trim() || service.nombre,
+    description: service.descripcion ?? "",
+    bullets: service.beneficios ?? [],
+    image: service.imagen_url || drenajeImg,
+    ctaPrimary: { label, to },
+    ctaSecondary:
+      secondaryLabel && secondaryUrl ? { label: secondaryLabel, to: secondaryUrl } : undefined,
+  };
+}
